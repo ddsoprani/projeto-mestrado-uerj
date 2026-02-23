@@ -23,6 +23,44 @@ reg_sp = gpd.read_file("/home/danilo/Projeto-Mestrado/Testes_Shape_File_INPE/SP_
 # 5. Associa cada pedaco de municipio a sua regiao intermediaria
 mun_sp_mata_reg = gpd.sjoin(mun_sp_mata, reg_sp, predicate="intersects")
 
+#print("Total de linhas:", len(mun_sp_mata_reg))
+#print("Municípios únicos:", mun_sp_mata_reg["NM_MUN"].nunique())
+duplicados = mun_sp_mata_reg.duplicated(subset=["geometry"])
+#print("Geometrias duplicadas:", duplicados.sum())
+
+#print(mun_sp_mata_reg.shape)
+#print(mun_sp_mata_reg["NM_MUN"].value_counts().head())
+
+#mun_sp_mata_reg["area_km2"] = mun_sp_mata_reg.geometry.area / 1e6
+#print(mun_sp_mata_reg["area_km2"].sum())
+
+mun_sp_mata_reg = mun_sp_mata_reg.drop_duplicates(subset=["geometry"])
+#print(mun_sp_mata_reg.duplicated(subset=["geometry"]).sum());
+
+
+print("Total de linhas:", len(mun_sp_mata_reg))
+print("Municípios únicos:", mun_sp_mata_reg["NM_MUN"].nunique())
+duplicados = mun_sp_mata_reg.duplicated(subset=["geometry"])
+print("Geometrias duplicadas:", duplicados.sum())
+
+
+#print();
+#print("Linhas:", len(mun_sp_mata_reg))
+#print("Municípios únicos:", mun_sp_mata_reg["NM_MUN"].nunique())
+
+#print();
+#print(mun_sp_mata_reg.groupby("NM_MUN").size().sort_values(ascending=False).head());
+
+#print();
+
+#gdf_utm = mun_sp_mata_reg.to_crs("EPSG:31983")
+#gdf_utm["area_km2"] = gdf_utm.geometry.area / 1e6
+#area_por_municipio = gdf_utm.groupby("NM_MUN")["area_km2"].sum()
+#print(area_por_municipio);
+
+
+#exit();
+
 mun_sp_mata_reg = mun_sp_mata_reg.rename(columns={
     "NM_RGINT_right": "NM_RGINT",
     "CD_RGINT_right": "CD_RGINT",
@@ -52,6 +90,7 @@ regioes_sp_mata = mun_sp_mata_reg.dissolve(by="NM_RGINT")
 #print(mun_sp_mata_reg["NM_RGINT"].nunique())
 #print(mun_sp_mata_reg["SIGLA_UF"].unique())
 #print(mun_sp_mata_reg["NM_MUN"].nunique())
+
 
 
 for regiao in mun_sp_mata_reg['NM_RGINT'].unique():

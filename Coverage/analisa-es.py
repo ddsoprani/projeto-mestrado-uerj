@@ -33,13 +33,6 @@ saida_csv = f"_{ano}_cobertura_por_municipio_ES.csv"
 # -------------------------
 # CLASSES DE INTERESSE
 # -------------------------
-'''CLASSES = {
-    3:  "Floresta",
-    15: "Pastagem",
-    21: "Agricultura",
-    24: "Urbano",
-    33: "Agua"
-}'''
 
 CLASSES = {
     0: "Sem dados",

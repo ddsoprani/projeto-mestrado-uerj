@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 
-caminho_base = "../ERA5/dados-climaticos/ES/"  # pasta principal
+caminho_base = "../ERA5/dados-climaticos/SP/"  # pasta principal
 
 lista_dfs = []
 
@@ -13,7 +13,7 @@ for ano in os.listdir(caminho_base):
 
     if os.path.isdir(caminho_ano):
 
-        arquivo = f"dados_climaticos_mensais_era5_municipios_ES_{ano}.csv"
+        arquivo = f"dados_climaticos_mensais_era5_municipios_SP_{ano}-v5.csv"
         caminho_arquivo = os.path.join(caminho_ano, arquivo)
 
         if os.path.exists(caminho_arquivo):
@@ -52,4 +52,4 @@ df_pivot = df_anual.pivot(
 df_pivot = df_pivot.sort_index(axis=1)
 df_pivot = df_pivot.round(2)
 
-df_pivot.to_csv("temperatura_media_anual_municipios-ES.csv")
+df_pivot.to_csv("temperatura_media_anual_municipios-SP.csv")

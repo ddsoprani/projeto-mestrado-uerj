@@ -115,8 +115,9 @@ def geraResult(resultados, shp):
 
 
 
-
-#### Codigo principal ####
+##########################################################
+##################### Codigo principal ###################
+##########################################################
 
 
 #Lista as 11 regioes de SP
@@ -142,6 +143,7 @@ for shp in shapes_por_regiao:
 
 
 df = pd.DataFrame(resultados)
+
 df = (df.groupby("Municipio", as_index=False).sum());
 df.to_csv(saida_csv, sep=";", index=False, encoding="utf-8-sig", decimal=",")
 

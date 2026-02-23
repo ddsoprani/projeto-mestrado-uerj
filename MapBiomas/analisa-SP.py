@@ -37,6 +37,8 @@ with open(f"/home/danilo/Projeto-Mestrado/Coverage/CSV-SP/_{ano_anterior}_cobert
         coverage[municipio] = [sem_dados, formacao_flor, mangue]
 
 
+#print(coverage['Altair']);
+#exit();
 
 
 
@@ -70,7 +72,7 @@ def geraResult(resultados, shp_sp):
 
     # PASSO 6
 
-    # Geometrias do RJ
+    # Geometrias de SP
     geoms = sp.geometry.values
 
     # Recorte (mask)
@@ -144,6 +146,8 @@ def geraResult(resultados, shp_sp):
 
     for idx, row in municipios.iterrows():
         nome_mun = row[col_nome]
+        '''if nome_mun != 'Altair':
+            continue;'''
         geom = [row.geometry]
 
         try:
@@ -165,13 +169,20 @@ def geraResult(resultados, shp_sp):
 
             cover_forest = coverage[nome_mun][1].replace(",",".");
             cover_mague  = coverage[nome_mun][2].replace(",",".");
-
             cover = float(cover_forest) + float(cover_mague);
+            
+            
             if float(cover) != 0:
                 percent = (float(area_km2) / float(cover)) * 100;
                 percent = round(percent, 2);
             else:
                 percent = '-';
+            
+                #print("pixels_desmat: ", pixels_desmat);
+                #print("Cobertura vegetal de ", nome_mun, ": ", coverage[nome_mun], " ------ ", cover);
+                #print("porcentagem:", percent);
+                #print(area_km2, " / ",  cover);
+                #exit();
 
             resultados.append({
                 "municipio": nome_mun,
@@ -223,8 +234,27 @@ for shp in shapes_por_regiao:
 #df_resultados = pd.DataFrame(resultados)
 df_municipios = pd.DataFrame(resultados);
 
+#df_altair = df_municipios[df_municipios['municipio'] == 'Altair']
+#print(df_altair)
+
 #Junta os municípios pelo nome (pois pode ter gerado mais de um):
-df_municipios = (df_municipios.groupby("municipio", as_index=False).sum());
+#df_municipios = (df_municipios.groupby("municipio", as_index=False).sum());
+
+df_municipios = (
+    df_municipios
+    .groupby("municipio", as_index=False)
+    .agg({
+        f"cobertura_vegetal_{ano_anterior}": "first",  # ou "mean"
+        f"pixels_desmat_{ano}": "sum",
+        f"area_desmat_ha_{ano}": "sum",
+        f"area_desmat_km2_{ano}": "sum",
+        "percentual": "sum"
+    })
+)
+
+
+#df_altair = df_municipios[df_municipios['municipio'] == 'Altair']
+#print(df_altair)
 
 
 #print(df_resultados.head())

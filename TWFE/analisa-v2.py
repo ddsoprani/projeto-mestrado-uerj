@@ -23,8 +23,39 @@ def twfe_from_csv(temp_path, forest_path):
     df['Temperatura'] = df['Temperatura'].astype(float)
     df['Cobertura'] = df['Cobertura'].astype(float)
 
-    print(df.head(100));
+    #print(df.head(100));
+    #print("--------------------------------------------------");
+    
+    df = df.dropna(subset=['Cobertura'])
+
+    '''print(df.isna().sum())
     print("--------------------------------------------------");
+    print(df[df[['Temperatura','Cobertura']].isna().any(axis=1)].head())
+    exit();'''
+
+    #print(df.groupby("municipio")["Cobertura"].std().describe());
+    #print("--------------------------------------------------");
+
+    #print(df["Cobertura"].describe())
+    #print("--------------------------------------------------");
+
+    #print(df[df["Cobertura"] > 1])
+    #print("--------------------------------------------------");
+
+    #print((df["Cobertura"] > 1).sum());
+    #print((df["Cobertura"] > 1).mean());
+
+    #print(df[df["Cobertura"] > 1]["municipio"].nunique());
+    #print(df[df["Cobertura"] > 1]["municipio"].value_counts().head(20))
+
+    #print('------------------------------------------------');
+
+    #print(df[df["municipio"] == "São Lourenço da Serra"][["Ano", "Cobertura"]]);
+
+
+
+    #exit();
+
 
     #print(df.shape)
     #print(df['municipio'].nunique())
@@ -128,6 +159,7 @@ def twfe_from_csv(temp_path, forest_path):
 
 #beta = twfe_from_csv("temperatura_media_anual_municipios-ES.csv", "desmatamento_apenas_ES.csv")
 #beta = twfe_from_csv("temperatura_media_anual_municipios-ES.csv", "area_verde_apenas_ES.csv")
-beta = twfe_from_csv("temperatura_media_anual_municipios-ES.csv", "percentual_ES.csv")
+
+beta = twfe_from_csv("temperatura_media_anual_municipios-SP.csv", "percentual_SP3.csv")
 #print("Beta estimado:", beta)
 

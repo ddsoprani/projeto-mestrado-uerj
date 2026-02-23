@@ -13,7 +13,6 @@ c.retrieve(
     'reanalysis-era5-single-levels-monthly-means',
     {
         'product_type': 'monthly_averaged_reanalysis',
-        #'variable': '2m_temperature',
 
         'variable': [
             '2m_temperature',
