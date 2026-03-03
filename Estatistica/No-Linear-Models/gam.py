@@ -2,11 +2,12 @@ import pandas as pd
 import re
 import os
 
+UF = 'SP';
 
 # MONTANDO O PAINEL DE USO DA TERRA
 
 # carregar uso da terra
-uso = pd.read_csv("../../dados_juntos_clima_desmat/dados_juntos_V5/Uso_da_terra_V5/CSV-ES/desmatamento-final-ES-v5.csv", sep=";", decimal = ',');
+uso = pd.read_csv(f"../../dados_juntos_clima_desmat/dados_juntos_V5/Uso_da_terra_V5/CSV-{UF}/desmatamento-final-{UF}-v5.csv", sep=";", decimal = ',');
 
 # padronizar nome
 uso = uso.rename(columns={"Municipio": "municipio"})
@@ -36,7 +37,7 @@ uso_painel = uso_painel.rename(columns={
 # MONTANDO O PAINEL CLIMATICO
 
 # Ler todos os arquivos de clima
-pasta_clima = "../../dados_juntos_clima_desmat/dados_juntos_V5/Clima_V5/ES/"
+pasta_clima = f"../../dados_juntos_clima_desmat/dados_juntos_V5/Clima_V5/{UF}/"
 
 arquivos = [f for f in os.listdir(pasta_clima) if f.endswith(".csv")]
 
@@ -86,7 +87,8 @@ painel = pd.merge(
 )
 
 #print("Dimensao final:", painel.shape)
-#print(painel.head(5))
+#print(painel.head(5));
+#exit();
 
 # garantir que latitude/longitude sejam numéricas
 painel['latitude'] = painel['latitude'].str.replace(',', '.').astype(float)
@@ -108,9 +110,9 @@ painel_anual = (
     .reset_index()
 )
 
-#print("Dimensao final:", painel_anual.shape);
+print("Dimensao final:", painel_anual.shape);
 print(painel_anual.head(5));
-exit();
+#exit();
 
 #print(painel_anual[['area_florestal','area_desmat']].corr());
 
@@ -179,6 +181,7 @@ gam_temp_spatial = LinearGAM(
 )
 
 gam_temp_spatial.fit(X, y)
+print("Adicionando as coordenadas (lat,lon):");
 print("Pseudo-R²:", gam_temp_spatial.statistics_['pseudo_r2'])
 
 
@@ -195,6 +198,7 @@ for i, feature in enumerate(features):
     plt.show()
 
 
+print("Adicionando as coordenadas (lat,lon) + Tempo:");
 # Adiciona o ano (GAM espacial + temporal):
 
 # Matriz de regressoras
@@ -225,6 +229,9 @@ gam_temp_full = LinearGAM(
 
 
 print(gam_temp_full.statistics_['pseudo_r2'])
+
+print();
+print(gam_temp_full.summary());
 
 '''XX = gam_temp_full.generate_X_grid(term=0)
 plt.figure()

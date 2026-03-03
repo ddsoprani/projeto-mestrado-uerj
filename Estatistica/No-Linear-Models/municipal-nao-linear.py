@@ -3,11 +3,12 @@ import pandas as pd
 import re
 import os
 
+UF = 'SP';
 
 # MONTANDO O PAINEL DE USO DA TERRA
 
 # carregar uso da terra
-uso = pd.read_csv("../../dados_juntos_clima_desmat/dados_juntos_V5/Uso_da_terra_V5/CSV-ES/desmatamento-final-ES-v5.csv", sep=";", decimal = ',');
+uso = pd.read_csv(f"../../dados_juntos_clima_desmat/dados_juntos_V5/Uso_da_terra_V5/CSV-{UF}/desmatamento-final-{UF}-v5.csv", sep=";", decimal = ',');
 
 # padronizar nome
 uso = uso.rename(columns={"Municipio": "municipio"})
@@ -37,7 +38,7 @@ uso_painel = uso_painel.rename(columns={
 # MONTANDO O PAINEL CLIMATICO
 
 # Ler todos os arquivos de clima
-pasta_clima = "../../dados_juntos_clima_desmat/dados_juntos_V5/Clima_V5/ES/"
+pasta_clima = f"../../dados_juntos_clima_desmat/dados_juntos_V5/Clima_V5/{UF}/"
 
 arquivos = [f for f in os.listdir(pasta_clima) if f.endswith(".csv")]
 
@@ -98,18 +99,21 @@ painel = painel.set_index(['municipio', 'data'])
 ############### Etapa 1 - Modelo Dinamico com Termo Quadratico ################
 
 # Criar termo quadratico
-painel['desmat2'] = painel['area_desmat']**2
+#painel['desmat2'] = painel['area_desmat']**2
+painel['florestal2'] = painel['area_florestal']**2
 
 # Garantir que temp_lag1 ja existe
 painel['temp_lag1'] = painel.groupby(level=0)['temp_media'].shift(1)
 
-painel_nl = painel.dropna(subset=['temp_lag1','desmat2'])
+painel_nl = painel.dropna(subset=['temp_lag1','florestal2'])
+#painel_nl = painel.dropna(subset=['temp_lag1','desmat2'])
 
 from linearmodels.panel import PanelOLS
 import statsmodels.api as sm
 
 y = painel_nl['temp_media']
-X = sm.add_constant(painel_nl[['temp_lag1','area_desmat','desmat2']])
+#X = sm.add_constant(painel_nl[['temp_lag1','area_desmat','desmat2']])
+X = sm.add_constant(painel_nl[['temp_lag1','area_florestal','florestal2']])
 
 modelo_nl = PanelOLS(
     y,
@@ -121,8 +125,10 @@ modelo_nl = PanelOLS(
 print(modelo_nl.summary);
 
 
-print(painel['area_desmat'].describe(percentiles=[0.90, 0.95, 0.99]));
+#print(painel['area_desmat'].describe(percentiles=[0.90, 0.95, 0.99]));
+print(painel['area_florestal'].describe(percentiles=[0.90, 0.95, 0.99]));
 
+exit();
 
 # Grafico
 
@@ -130,8 +136,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Coeficientes do modelo
-beta1 = 0.0043
-beta2 = -4.921e-05
+beta1 = 0.0005
+beta2 = -0.0000841
 
 # Criar faixa de desmatamento (0 até máximo observado)
 desmat_range = np.linspace(0, painel['area_desmat'].max(), 200)
@@ -143,7 +149,7 @@ efeito_marginal = beta1 + 2*beta2*desmat_range
 plt.figure(figsize=(8,5))
 plt.plot(desmat_range, efeito_marginal, color='blue', lw=2)
 plt.axhline(0, color='black', linestyle='--')
-plt.axvline(44, color='red', linestyle='--', label='Ponto de virada teórico')
+plt.axvline(3, color='red', linestyle='--', label='Ponto de virada teórico')
 plt.scatter(painel['area_desmat'], np.zeros_like(painel['area_desmat']),
             alpha=0.05, color='grey', label='Observações')
 plt.xlabel('Área de desmatamento (km²)')

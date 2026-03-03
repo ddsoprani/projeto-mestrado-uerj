@@ -13,7 +13,6 @@ c.retrieve(
     'reanalysis-era5-single-levels-monthly-means',
     {
         'product_type': 'monthly_averaged_reanalysis',
-        #'variable': '2m_temperature',
 
         'variable': [
             '2m_temperature',
@@ -39,7 +38,7 @@ c.retrieve(
             -39.0,  # Leste
         ],
     },
-    f"dados-climaticos/{ano}/temp_era5_{ano}_es.nc"
+    f"dados-climaticos/ES/{ano}/temp_era5_{ano}_es.nc"
 )
 
 print(f"Download finalizado para o ano {ano}!")

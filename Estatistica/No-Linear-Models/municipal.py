@@ -3,11 +3,13 @@ import pandas as pd
 import re
 import os
 
+UF = 'SP';
+
 
 # MONTANDO O PAINEL DE USO DA TERRA
 
 # carregar uso da terra
-uso = pd.read_csv("../../dados_juntos_clima_desmat/dados_juntos_V5/Uso_da_terra_V5/CSV-ES/desmatamento-final-ES-v5.csv", sep=";", decimal = ',');
+uso = pd.read_csv(f"../../dados_juntos_clima_desmat/dados_juntos_V5/Uso_da_terra_V5/CSV-{UF}/desmatamento-final-{UF}-v5.csv", sep=";", decimal = ',');
 
 # padronizar nome
 uso = uso.rename(columns={"Municipio": "municipio"})
@@ -37,7 +39,7 @@ uso_painel = uso_painel.rename(columns={
 # MONTANDO O PAINEL CLIMATICO
 
 # Ler todos os arquivos de clima
-pasta_clima = "../../dados_juntos_clima_desmat/dados_juntos_V5/Clima_V5/ES/"
+pasta_clima = f"../../dados_juntos_clima_desmat/dados_juntos_V5/Clima_V5/{UF}/"
 
 arquivos = [f for f in os.listdir(pasta_clima) if f.endswith(".csv")]
 
@@ -90,8 +92,9 @@ painel = pd.merge(
 painel['latitude'] = painel['latitude'].str.replace(',', '.').astype(float)
 painel['longitude'] = painel['longitude'].str.replace(',', '.').astype(float)
 
-#print("Dimensao final:", painel.shape)
-#print(painel.head(5))
+'''print("Dimensao final:", painel.shape)
+print(painel.head(5));
+exit();'''
 
 #print(painel.groupby('municipio')['area_desmat'].std().describe());
 
