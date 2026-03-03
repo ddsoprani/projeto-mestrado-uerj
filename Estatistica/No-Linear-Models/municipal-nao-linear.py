@@ -99,21 +99,27 @@ painel = painel.set_index(['municipio', 'data'])
 ############### Etapa 1 - Modelo Dinamico com Termo Quadratico ################
 
 # Criar termo quadratico
-#painel['desmat2'] = painel['area_desmat']**2
-painel['florestal2'] = painel['area_florestal']**2
+painel['desmat2'] = painel['area_desmat']**2
+#painel['florestal2'] = painel['area_florestal']**2
 
 # Garantir que temp_lag1 ja existe
-painel['temp_lag1'] = painel.groupby(level=0)['temp_media'].shift(1)
+#painel['temp_lag1'] = painel.groupby(level=0)['temp_media'].shift(1)
+painel['prec_lag1'] = painel.groupby(level=0)['precipitacao'].shift(1)
 
-painel_nl = painel.dropna(subset=['temp_lag1','florestal2'])
+#painel_nl = painel.dropna(subset=['temp_lag1','florestal2'])
+
 #painel_nl = painel.dropna(subset=['temp_lag1','desmat2'])
+painel_nl = painel.dropna(subset=['prec_lag1','desmat2'])
 
 from linearmodels.panel import PanelOLS
 import statsmodels.api as sm
 
-y = painel_nl['temp_media']
+#y = painel_nl['temp_media']
+y = painel_nl['precipitacao']
 #X = sm.add_constant(painel_nl[['temp_lag1','area_desmat','desmat2']])
-X = sm.add_constant(painel_nl[['temp_lag1','area_florestal','florestal2']])
+X = sm.add_constant(painel_nl[['prec_lag1','area_desmat','desmat2']])
+
+#X = sm.add_constant(painel_nl[['temp_lag1','area_florestal','florestal2']])
 
 modelo_nl = PanelOLS(
     y,
@@ -125,8 +131,8 @@ modelo_nl = PanelOLS(
 print(modelo_nl.summary);
 
 
-#print(painel['area_desmat'].describe(percentiles=[0.90, 0.95, 0.99]));
-print(painel['area_florestal'].describe(percentiles=[0.90, 0.95, 0.99]));
+print(painel['area_desmat'].describe(percentiles=[0.90, 0.95, 0.99]));
+#print(painel['area_florestal'].describe(percentiles=[0.90, 0.95, 0.99]));
 
 exit();
 
@@ -136,8 +142,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Coeficientes do modelo
-beta1 = 0.0005
-beta2 = -0.0000841
+beta1 = -1.0517
+beta2 = 0.0140
 
 # Criar faixa de desmatamento (0 até máximo observado)
 desmat_range = np.linspace(0, painel['area_desmat'].max(), 200)

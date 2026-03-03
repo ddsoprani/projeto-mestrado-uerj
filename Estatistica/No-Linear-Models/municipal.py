@@ -3,7 +3,7 @@ import pandas as pd
 import re
 import os
 
-UF = 'SP';
+UF = 'ES';
 
 
 # MONTANDO O PAINEL DE USO DA TERRA
@@ -119,7 +119,8 @@ painel = painel.set_index(['municipio', 'data'])
 
 # MODELO 1 - So desmatamento:
 def model_1(painel):
-    y = painel['temp_media']
+    y = painel['precipitacao']
+    #y = painel['temp_media']
 
     X1 = painel[['area_desmat']]
     X1 = sm.add_constant(X1)
@@ -137,7 +138,8 @@ def model_1(painel):
 
 # MODELO 2 - So floresta:
 def model_2(painel):
-    y = painel['temp_media']
+    #y = painel['temp_media']
+    y = painel['precipitacao']
     X2 = painel[['area_florestal']]
     X2 = sm.add_constant(X2)
 
@@ -154,7 +156,8 @@ def model_2(painel):
 
 # MODELO 3 - Ambos juntos:
 def model_3(painel):
-    y = painel['temp_media']
+    #y = painel['temp_media']
+    y = painel['precipitacao']
     X3 = painel[['area_desmat', 'area_florestal']]
     X3 = sm.add_constant(X3)
 
@@ -188,7 +191,8 @@ def modeloDefasagem(painel):
     from linearmodels.panel import PanelOLS
     import statsmodels.api as sm
 
-    y = painel_lag['temp_media']
+    #y = painel_lag['temp_media']
+    y = painel_lag['precipitacao']
     X = sm.add_constant(painel_lag[['desmat_lag1']])
 
     modelo_lag = PanelOLS(
@@ -204,12 +208,15 @@ def modeloDefasagem(painel):
     
 # Modelo com PRIMEIRA DIFERENÇA:
 def modeloPrimeiraDiferenca(painel):
-    painel['d_temp'] = painel.groupby(level=0)['temp_media'].diff()
+    #painel['d_temp'] = painel.groupby(level=0)['temp_media'].diff()
+    painel['d_prec'] = painel.groupby(level=0)['precipitacao'].diff()
     painel['d_desmat'] = painel.groupby(level=0)['area_desmat'].diff()
 
-    painel_diff = painel.dropna(subset=['d_temp','d_desmat'])
+    #painel_diff = painel.dropna(subset=['d_temp','d_desmat'])
+    painel_diff = painel.dropna(subset=['d_prec','d_desmat'])
 
-    y = painel_diff['d_temp']
+    #y = painel_diff['d_temp']
+    y = painel_diff['d_prec']
     X = sm.add_constant(painel_diff[['d_desmat']])
 
     modelo_diff = PanelOLS(
@@ -225,12 +232,16 @@ def modeloPrimeiraDiferenca(painel):
 
 # MODELO DINAMICO:
 def modeloDinamico(paniel):
-    painel['temp_lag1'] = painel.groupby(level=0)['temp_media'].shift(1)
+    #painel['temp_lag1'] = painel.groupby(level=0)['temp_media'].shift(1)
+    painel['prec_lag1'] = painel.groupby(level=0)['precipitacao'].shift(1)
 
-    painel_dyn = painel.dropna(subset=['temp_lag1'])
+    #painel_dyn = painel.dropna(subset=['temp_lag1'])
+    painel_dyn = painel.dropna(subset=['prec_lag1'])
 
-    y = painel_dyn['temp_media']
-    X = sm.add_constant(painel_dyn[['temp_lag1','area_desmat']])
+    #y = painel_dyn['temp_media']
+    y = painel_dyn['precipitacao']
+    #X = sm.add_constant(painel_dyn[['temp_lag1','area_desmat']])
+    X = sm.add_constant(painel_dyn[['prec_lag1','area_desmat']])
 
     modelo_dyn = PanelOLS(
         y,

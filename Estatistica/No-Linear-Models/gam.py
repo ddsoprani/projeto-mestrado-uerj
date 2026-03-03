@@ -2,7 +2,7 @@ import pandas as pd
 import re
 import os
 
-UF = 'SP';
+UF = 'RJ';
 
 # MONTANDO O PAINEL DE USO DA TERRA
 
@@ -110,9 +110,22 @@ painel_anual = (
     .reset_index()
 )
 
-print("Dimensao final:", painel_anual.shape);
-print(painel_anual.head(5));
-#exit();
+'''print("Dimensao final:", painel_anual.shape);
+print(painel_anual.head(10));
+
+print(painel_anual["precipitacao"].describe());
+
+import matplotlib.pyplot as plt
+
+plt.hist(painel_anual["precipitacao"], bins=30)
+plt.xlabel("Precipitação")
+plt.ylabel("Frequência")
+plt.title("Histograma da Precipitação")
+plt.show()
+
+print("Assimetria:", painel_anual["precipitacao"].skew());
+print("Zeros: ", (painel_anual["precipitacao"] == 0).sum());
+exit();'''
 
 #print(painel_anual[['area_florestal','area_desmat']].corr());
 
@@ -120,7 +133,7 @@ print(painel_anual.head(5));
 
 
 
-########################  Modelo para Temperatura: #######################
+########################  Modelo para Temperatura/Precipitacao: #######################
 
 
 from pygam import LinearGAM, s
@@ -128,7 +141,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
 
 X = painel_anual[['area_florestal', 'area_desmat']].values
-y = painel_anual['temp_media'].values
+y = painel_anual['precipitacao'].values
+#y = painel_anual['temp_media'].values
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.3, random_state=42
@@ -172,7 +186,8 @@ import matplotlib.pyplot as plt
 from pygam import LinearGAM, s, te
 
 X = painel_anual[['area_florestal','area_desmat','latitude','longitude']].values
-y = painel_anual['temp_media'].values
+y = painel_anual['precipitacao'].values
+#y = painel_anual['temp_media'].values
 
 gam_temp_spatial = LinearGAM(
     s(0, n_splines=6) +
@@ -203,7 +218,8 @@ print("Adicionando as coordenadas (lat,lon) + Tempo:");
 
 # Matriz de regressoras
 X = painel_anual[['area_florestal', 'area_desmat', 'latitude', 'longitude', 'ano']].values
-y = painel_anual['temp_media'].values
+y = painel_anual['precipitacao'].values
+#y = painel_anual['temp_media'].values
 
 # Modelo com espaco + tempo
 '''gam_temp_full = LinearGAM(
