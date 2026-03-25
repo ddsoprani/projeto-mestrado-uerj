@@ -1,0 +1,124 @@
+// 1. Carregar dataset
+var hansen = ee.Image("UMD/hansen/global_forest_change_2024_v1_12");
+
+var year = 1; // 2001
+
+// 2. Definir região
+var region = ee.Geometry.Rectangle([32, -26, 41, -12]);
+Map.addLayer(region, {color: 'red'}, 'Área');
+Map.setCenter(39.5, -19, 5);
+
+
+// 3. Cobertura florestal
+var treecover = hansen.select('treecover2000');
+
+Map.addLayer(
+  treecover.clip(region),
+  {min: 0, max: 100, palette: ['white', 'green']},
+  'Cobertura florestal 2000'
+);
+
+// 4. Máscara de floresta (>=30%)
+var forestMask = treecover.gte(30);
+
+Map.addLayer(
+  forestMask.clip(region),
+  {min: 0, max: 1, palette: ['white', 'green']},
+  'Floresta (>=30%)'
+);
+
+// 5. Desmatamento
+var loss = hansen.select('lossyear');
+
+// aplicar máscara
+//var loss2001 = loss.eq(1).rename('loss').toInt();
+
+var lossYear = loss.eq(year).updateMask(forestMask).rename('loss');
+
+
+// Função para criar grid
+var dx = 0.25;
+var dy = 0.25;
+
+// limites da sua região
+var xmin = 32;
+var xmax = 41;
+var ymin = -26;
+var ymax = -12;
+
+// criar lista de células
+var cells = [];
+
+for (var x = xmin; x < xmax; x += dx) {
+  for (var y = ymin; y < ymax; y += dy) {
+    var cell = ee.Feature(
+      ee.Geometry.Rectangle([x, y, x + dx, y + dy])
+    );
+    cells.push(cell);
+  }
+}
+
+// transformar em FeatureCollection
+var grid = ee.FeatureCollection(cells);
+
+// visualizar
+Map.addLayer(grid, {}, 'Grid');
+
+//print('Grid:', grid);
+
+
+
+// PASSO 3
+
+// imagem de área por pixel (km²)
+var pixelArea = ee.Image.pixelArea().divide(1e6);
+
+// máscara de desmatamento (apenas pixels com loss)
+//var lossMask = loss2001.updateMask(loss2001);
+var lossMask = lossYear.updateMask(lossYear);
+
+// calcular área por célula
+var gridStats = grid.map(function(cell) {
+  
+  var lossArea = lossMask.multiply(pixelArea).reduceRegion({
+    reducer: ee.Reducer.sum(),
+    geometry: cell.geometry(),
+    scale: 30,
+    maxPixels: 1e13
+  });
+  
+  return cell.set({
+    'loss_km2': lossArea.get('loss'),
+    'year': 2000 + year
+  });
+});
+
+//print('Grid stats:', gridStats);
+
+
+var gridFinal = gridStats.map(function(cell) {
+  
+  var area_km2 = cell.geometry().area().divide(1e6);
+  
+  var centroid = cell.geometry().centroid();
+  var coords = centroid.coordinates();
+  
+  return cell.set({
+    'area_km2': area_km2,
+    'lon': coords.get(0),
+    'lat': coords.get(1)
+  });
+});
+
+print("Grid Final: ", gridFinal);
+
+
+var ano = 2000 + year;
+var filename =  'grid_desmatamento_' + ano; 
+ 
+Export.table.toDrive({
+  collection: gridFinal,
+  description: filename,
+  folder: 'GEE_desmatamento',
+  fileFormat: 'GeoJSON'
+});

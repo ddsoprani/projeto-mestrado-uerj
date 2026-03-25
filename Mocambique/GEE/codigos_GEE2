@@ -1,0 +1,114 @@
+// 1. Carregar dataset
+var hansen = ee.Image("UMD/hansen/global_forest_change_2024_v1_12");
+
+// 2. Definir região
+//var region = ee.Geometry.Rectangle([36, -27, 41, -15]);
+//var region = ee.Geometry.Rectangle([41, -16, 40, -10]);
+var region = ee.Geometry.Rectangle([40, -16, 41, -10]);
+Map.addLayer(region, {color: 'red'}, 'Área');
+Map.setCenter(40.5, -13, 6);
+
+// 3. Cobertura florestal
+var treecover = hansen.select('treecover2000');
+
+Map.addLayer(
+  treecover.clip(region),
+  {min: 0, max: 100, palette: ['white', 'green']},
+  'Cobertura florestal 2000'
+);
+
+// 4. Máscara de floresta (>=30%)
+var forestMask = treecover.gte(30);
+
+Map.addLayer(
+  forestMask.clip(region),
+  {min: 0, max: 1, palette: ['white', 'green']},
+  'Floresta (>=30%)'
+);
+
+// 5. Desmatamento
+var loss = hansen.select('lossyear');
+
+// aplicar máscara
+var lossForest = loss.updateMask(forestMask);
+
+// ************************************************
+
+
+// Função para criar grid
+// tamanho da célula (graus)
+var dx = 0.5;
+var dy = 0.5;
+
+// limites da sua região
+var xmin = 40;
+var xmax = 41;
+var ymin = -16;
+var ymax = -10;
+
+// criar lista de células
+var cells = [];
+
+for (var x = xmin; x < xmax; x += dx) {
+  for (var y = ymin; y < ymax; y += dy) {
+    var cell = ee.Feature(
+      ee.Geometry.Rectangle([x, y, x + dx, y + dy])
+    );
+    cells.push(cell);
+  }
+}
+
+// transformar em FeatureCollection
+var grid = ee.FeatureCollection(cells);
+
+// visualizar
+Map.addLayer(grid, {}, 'Grid');
+
+
+print('Grid:', grid);
+
+
+
+// PASSO 3
+
+var loss = hansen.select('lossyear');
+
+var gridStats = grid.map(function(cell) {
+  
+  var samples = loss.gt(0).rename('loss').toInt().sample({
+    region: cell.geometry(),
+    scale: 30,
+    numPixels: 500
+  });
+  
+  var sum = samples.aggregate_sum('loss');
+  
+  return cell.set({
+    'loss_pixels': sum
+  });
+});
+
+print('Grid stats:', gridStats);
+
+
+// Passo 
+
+var gridStats2 = gridStats.map(function(cell) {
+  var lossPixels = ee.Number(cell.get('loss_pixels'));
+  
+  var proportion = lossPixels.divide(500); // numPixels usado
+  
+  return cell.set({
+    'loss_prop': proportion
+  });
+});
+
+print('Com proporção:', gridStats2);
+
+
+Export.table.toDrive({
+  collection: gridStats2,
+  description: 'grid_desmatamento',
+  fileFormat: 'CSV'
+});
+
